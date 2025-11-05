@@ -1,0 +1,55 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+*.egg
+*.egg-info/
+dist/
+build/
+.eggs/
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+
+# Virtual environments
+venv/
+.env/
+.venv/
+ENV/
+env/
+
+# VS Code
+.vscode/
+
+# Logs
+*.log
+nohup.out
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Node
+node_modules/
+
+# Secrets
+*.env
+.env.*
+backend/.env
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Test output
+coverage/
+htmlcov/
+
+# Misc
+*.bak
+*.swp
+*.tmp
+
+# Git
+*.orig
+*.rej
