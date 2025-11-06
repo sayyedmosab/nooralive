@@ -1,0 +1,27 @@
+.container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  border: 1px solid #e6e6e6;
+  border-radius: 6px;
+  background: #fff;
+}
+.header {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 12px;
+  border-bottom: 1px solid #eee;
+  align-items: center;
+}
+.title { font-weight: 600; }
+.headerBtn { margin-left: 8px; }
+.messages { flex: 1; overflow: auto; padding: 8px; }
+.message { margin-bottom: 8px; padding: 8px; border-radius: 6px; }
+.user { background: #f1f7ff; align-self: flex-end; }
+.agent { background: #f6f6f8; }
+.system { background: #fff6e6; color: #5a4631; }
+.meta { font-size: 11px; color: #666; margin-bottom: 4px; }
+.content { white-space: pre-wrap; }
+.inputRow { display: flex; padding: 8px; border-top: 1px solid #eee; }
+.inputRow input { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+.inputRow button { margin-left: 8px; }
