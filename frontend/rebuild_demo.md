@@ -23,6 +23,7 @@ npm --prefix frontend start
 3. For quick testing, temporarily open the app and (only for manual testing) import the rebuild entry in your local `frontend/src/index.tsx` or open a route that mounts `frontend/src/rebuild/index.tsx` — the demo will mount into `#root` when present.
 
 Notes:
+
 - I created a backup of the current `Chat.tsx` and `CanvasManager.tsx` under `stash/frontend_backup_chatcanvas_20251106T0000/`.
 - I will not modify the main `frontend/src/*` files or open a PR until you confirm the rebuild is acceptable and request the PR.
 

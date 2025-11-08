@@ -22,5 +22,5 @@
   },
   "include": [
     "src"
-  ]
+, "../stash/rebuild", "../stash/chatreplit_legacy/rebuild"  ]
 }

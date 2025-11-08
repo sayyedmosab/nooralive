@@ -1,0 +1,164 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="AI Twin Tech - Experience the future of digital transformation" />
+    <meta name="theme-color" content="#1A2435" />
+    
+    <title>AI Twin Tech Website</title>
+    
+    <!-- Preload critical fonts -->
+    <link rel="preload" href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&family=Inter:wght@400;500;600&family=Tajawal:wght@400;500;700&family=Cairo:wght@400;500;600&display=swap" as="style" />
+  <!-- Inline simple favicon to avoid 404 in dev -->
+  <link rel="icon" href='data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><rect width="100%" height="100%" fill="%231A2435"/></svg>' />
+    
+    <!-- Base styles and theme -->
+    <style>
+      :root {
+        --font-size: 16px;
+        
+        /* Fonts */
+        --font-title-en: 'Poppins', sans-serif;
+        --font-body-en: 'Inter', sans-serif;
+        --font-title-ar: 'Cairo', sans-serif;
+        --font-body-ar: 'Tajawal', sans-serif;
+        
+        /* AI Twin Tech Brand Colors */
+        --color-primary-dark: #1A2435;
+        --color-primary-dark-hover: #0f1825;
+        --color-primary-dark-lighter: #2A3545;
+        --color-gold: #D4AF37;
+        --color-gold-dark: #B8960F;
+        --color-gold-light: #E5C158;
+        
+        /* Light corporate theme */
+        --background: #ffffff;
+        --foreground: #1e293b;
+        --card: #ffffff;
+        --card-foreground: #1e293b;
+        --primary: #1A2435;
+        --primary-foreground: #ffffff;
+        --secondary: #f1f5f9;
+        --secondary-foreground: #0f172a;
+        --muted: #f1f5f9;
+        --muted-foreground: #64748b;
+        --border: #e2e8f0;
+        --input: #e2e8f0;
+        --input-background: #ffffff;
+        --ring: #1A2435;
+      }
+
+      html {
+        font-size: var(--font-size);
+        scroll-behavior: smooth;
+        -webkit-text-size-adjust: 100%;
+      }
+
+      body {
+        margin: 0;
+        padding: 0;
+        background-color: var(--background);
+        color: var(--foreground);
+        font-family: var(--font-body-en);
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        text-rendering: optimizeLegibility;
+        line-height: 1.5;
+      }
+
+      body[dir="rtl"] {
+        font-family: var(--font-body-ar);
+      }
+
+      h1, h2, h3, h4, h5, h6 {
+        font-family: var(--font-title-en);
+        margin: 0;
+      }
+
+      [dir="rtl"] h1,
+      [dir="rtl"] h2,
+      [dir="rtl"] h3,
+      [dir="rtl"] h4,
+      [dir="rtl"] h5,
+      [dir="rtl"] h6 {
+        font-family: var(--font-title-ar);
+      }
+
+      [dir="rtl"] p,
+      [dir="rtl"] span,
+      [dir="rtl"] li {
+        font-family: var(--font-body-ar);
+      }
+
+      [dir="rtl"] {
+        text-align: right;
+        direction: rtl;
+      }
+
+      /* RTL text alignment - center alignment takes precedence */
+      [dir="rtl"] .text-center,
+      [dir="rtl"] .mx-auto {
+        text-align: center;
+      }
+
+      /* Left alignment for specific cases */
+      [dir="rtl"] .text-left {
+        text-align: left;
+      }
+
+      * {
+        box-sizing: border-box;
+        border-color: var(--border);
+        outline-color: var(--ring);
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+      }
+
+      svg {
+        shape-rendering: geometricPrecision;
+      }
+
+      img {
+        image-rendering: -webkit-optimize-contrast;
+        image-rendering: crisp-edges;
+        max-width: 100%;
+        height: auto;
+      }
+
+      /* Custom Scrollbar */
+      ::-webkit-scrollbar {
+        width: 10px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: #f1f5f9;
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background: linear-gradient(to bottom, #1A2435, #2A3545);
+        border-radius: 5px;
+      }
+
+      ::-webkit-scrollbar-thumb:hover {
+        background: linear-gradient(to bottom, #0f1825, #1A2435);
+      }
+
+      /* Selection Color */
+      ::selection {
+        background-color: rgba(26, 36, 53, 0.2);
+        color: #1e293b;
+      }
+
+      #root {
+        width: 100%;
+        min-height: 100vh;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.tsx"></script>
+  </body>
+</html>

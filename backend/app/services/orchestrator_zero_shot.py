@@ -641,116 +641,104 @@ This instruction applies to BOTH first-turn queries AND follow-up queries in con
 
 """
     
-    def process_query(
-        self, 
-        user_query: str, 
+    def process_query(self,
+        user_query: str,
         conversation_history: Optional[List[Dict[str, str]]] = None,
-        conversation_id: Optional[str] = None
+        conversation_id: Optional[str] = None,
     ) -> Dict[str, Any]:
+        """Single entry point: query -> response
+
+    Builds the Groq request with MCP tools, posts the request, parses the
+    assistant output (expected JSON), validates visualizations, and returns a structured dict.
         """
-        Single entry point: query → response
-        Uses Groq MCP to call Neo4j tools, AI handles everything.
-        
-        Args:
-            user_query: User's question or request
-            conversation_history: Optional list of previous messages [{"role": "user"|"assistant", "content": "..."}]
-            conversation_id: Optional conversation ID for debug logging
-            
-        Returns:
-            Dict containing:
-            - answer: Natural language response
-            - insights: List of analytical insights
-            - visualizations: List of chart configurations
-            - data: Query results and summary stats
-            - cypher_executed: Cypher query used
-            - data_source: "neo4j_graph"
-            - confidence: 0-1 confidence score
-        """
+
         start_time = time.time()
-        
+
         log_debug(2, "query_received", {
             "user_query": user_query,
             "conversation_id": conversation_id,
             "conversation_history_length": len(conversation_history) if conversation_history else 0,
-            "timestamp": start_time
+            "timestamp": start_time,
         })
-        
+
         # Build dynamic suffix: conversation history (if any) + current user query
-        # CRITICAL: Keep static prefix unchanged for Groq caching to work!
         dynamic_suffix = "\n"
-        
-        # Add conversation history if provided (last 10 messages max to stay within token budget)
+
         if conversation_history and len(conversation_history) > 0:
-            recent_history = conversation_history[-10:]  # Last 5 exchanges (10 messages)
-            dynamic_suffix += """━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+            recent_history = conversation_history[-10:]
+            dynamic_suffix += (
+                """━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 CONVERSATION HISTORY
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 """
+            )
             for msg in recent_history:
                 role = msg.get("role", "user").upper()
                 content = msg.get("content", "")
                 dynamic_suffix += f"{role}: {content}\n\n"
-            
+
             dynamic_suffix += "━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n\n"
-        
-        # Add current user query
+
         dynamic_suffix += f"""━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 CURRENT USER QUERY
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 {user_query}
 """
-        
+
         full_input = self.static_prefix + dynamic_suffix
-        
+
         try:
+            # Normalize server_label to canonical MCP form (lowercase, underscores)
+            # If MCP discovery provides a label, use it; otherwise default to 'neo4j_database'
+            server_label = "neo4j_database"
+
             request_payload = {
                 "model": self.model,
                 "input": full_input,
-                "tools": [{
-                    "type": "mcp",
-                    "server_label": "Neo4j Database",
-                    "server_url": self.mcp_server_url
-                }],
-                "temperature": 0.2
+                "tools": [
+                    {
+                        "type": "mcp",
+                        "server_label": server_label,
+                        "server_url": self.mcp_server_url,
+                    }
+                ],
+                "temperature": 0.2,
             }
 
             # Log RAW request being sent to Groq
             log_debug(2, "raw_llm_request", {
                 "endpoint": "https://api.groq.com/openai/v1/responses",
                 "model": self.model,
-                "full_payload": request_payload  # FULL RAW REQUEST
+                "full_payload": request_payload,
             })
+
             response = requests.post(
                 "https://api.groq.com/openai/v1/responses",
                 headers={
                     "Authorization": f"Bearer {self.groq_api_key}",
-                    "Content-Type": "application/json"
+                    "Content-Type": "application/json",
                 },
                 json=request_payload,
-                timeout=120
+                timeout=120,
             )
 
             if response.status_code != 200:
                 error_msg = response.text
-                # Log error response
                 log_debug(2, "groq_api_error_response", {
                     "status_code": response.status_code,
                     "error_body": error_msg,
-                    "elapsed_time": time.time() - start_time
+                    "elapsed_time": time.time() - start_time,
                 })
                 raise Exception(f"Groq API Error {response.status_code}: {error_msg}")
 
             result = response.json()
 
             # Log RAW response from Groq
-            log_debug(2, "raw_llm_response", {
-                "status_code": 200,
-                "full_response": result  # FULL RAW RESPONSE
-            })
+            log_debug(2, "raw_llm_response", {"status_code": 200, "full_response": result})
 
-            # Extract answer from Responses API output
+            # Extract assistant text from Responses API output
             answer = ""
             for item in result.get("output", []):
                 if item.get("type") == "message":
@@ -759,18 +747,25 @@ CURRENT USER QUERY
                             answer = c.get("text", "")
 
             usage = result.get("usage", {})
-            cache_rate = (usage.get("prompt_tokens_details", {}).get("cached_tokens", 0) / usage.get("prompt_tokens", 1) * 100) if usage.get("prompt_tokens", 0) > 0 else 0
+            cache_rate = (
+                usage.get("prompt_tokens_details", {}).get("cached_tokens", 0)
+                / usage.get("prompt_tokens", 1)
+                * 100
+            ) if usage.get("prompt_tokens", 0) > 0 else 0
 
+            # Parse assistant string into JSON (assistant expected to emit JSON object)
             try:
                 response_data = json.loads(answer)
-                # Validate required fields (unchanged)
-                required_fields = ["answer", "insights", "data", "data_source", "confidence"]
+
+                # Validate required fields
+                required_fields = ["answer", "analysis", "data", "data_source", "confidence"]
                 missing_fields = [f for f in required_fields if f not in response_data]
                 if missing_fields:
                     log_debug(2, "validation_warning", {
                         "missing_fields": missing_fields,
-                        "response_keys": list(response_data.keys())
+                        "response_keys": list(response_data.keys()),
                     })
+
                 # Validate visualizations structure (if present)
                 if "visualizations" in response_data and response_data["visualizations"]:
                     for idx, viz in enumerate(response_data["visualizations"]):
@@ -779,7 +774,7 @@ CURRENT USER QUERY
                         if viz_missing:
                             log_debug(2, "visualization_validation_error", {
                                 "chart_index": idx,
-                                "missing_fields": viz_missing
+                                "missing_fields": viz_missing,
                             })
                         # Validate chart type
                         valid_types = ["column", "bar", "line", "radar", "spider", "bubble", "bullet", "combo"]
@@ -787,47 +782,50 @@ CURRENT USER QUERY
                             log_debug(2, "invalid_chart_type", {
                                 "chart_index": idx,
                                 "provided_type": viz.get("type"),
-                                "valid_types": valid_types
+                                "valid_types": valid_types,
                             })
+
                 log_debug(2, "response_parsed", {
                     "answer_length": len(response_data.get("answer", "")),
-                    "insights_count": len(response_data.get("insights", [])),
-                    "visualizations_count": len(response_data.get("visualizations", [])),
+                    "analysis_count": len(response_data.get("analysis", [])),
+                    "visualizations_count": len(response_data.get("visualizations", [])) if response_data.get("visualizations") else 0,
                     "confidence": response_data.get("confidence", 0.0),
-                    "total_elapsed": time.time() - start_time
+                    "total_elapsed": time.time() - start_time,
                 })
+
                 return response_data
+
             except json.JSONDecodeError as parse_error:
                 log_debug(2, "parse_error", {
                     "error": str(parse_error),
                     "answer_preview": answer[:500],
-                    "answer_length": len(answer)
+                    "answer_length": len(answer),
                 })
                 # Return error response with raw answer
                 return {
                     "answer": answer if answer else "I encountered an error parsing the analysis.",
-                    "insights": ["Error: JSON parsing failed", f"Details: {str(parse_error)}"],
+                    "analysis": ["Error: JSON parsing failed", f"Details: {str(parse_error)}"],
                     "visualizations": [],
                     "data": {"error": str(parse_error), "raw_answer": answer[:500]},
                     "cypher_executed": "",
                     "data_source": "neo4j_graph",
                     "confidence": 0.0,
-                    "error": True
+                    "error": True,
                 }
         except Exception as e:
             log_debug(2, "orchestrator_error", {
                 "error_type": type(e).__name__,
                 "error_message": str(e),
-                "elapsed_time": time.time() - start_time
+                "elapsed_time": time.time() - start_time,
             })
             # Return error response
             return {
                 "answer": f"I encountered an error processing your query: {str(e)}",
-                "insights": [f"Error: {type(e).__name__}", f"Details: {str(e)}"],
+                "analysis": [f"Error: {type(e).__name__}", f"Details: {str(e)}"],
                 "visualizations": [],
                 "data": {"error": str(e)},
                 "cypher_executed": "",
                 "data_source": "neo4j_graph",
                 "confidence": 0.0,
-                "error": True
+                "error": True,
             }

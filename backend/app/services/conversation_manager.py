@@ -218,6 +218,47 @@ class ConversationManager:
         
         return "\n".join(context_lines)
     
+    def build_conversation_history(
+        self,
+        conversation_id: int,
+        max_messages: int = 10
+    ) -> List[Dict[str, str]]:
+        """
+        Build conversation history as list of message dicts for LLM context.
+        
+        THIS IS THE CORRECT FORMAT FOR ORCHESTRATOR - Returns list of dicts
+        
+        Args:
+            conversation_id: ID of conversation
+            max_messages: How many recent messages to include (default: 10)
+        
+        Returns:
+            List of dicts like:
+            [
+                {"role": "user", "content": "Show me education sector health"},
+                {"role": "assistant", "content": "Education sector health is 75/100..."},
+                {"role": "user", "content": "Compare it with healthcare"}
+            ]
+        """
+        # Get most recent messages (desc order) then reverse to chronological
+        messages = self.get_messages(conversation_id, limit=max_messages, order_desc=True)
+        
+        if not messages:
+            return []
+        
+        # Reverse to chronological order (oldest first)
+        messages = list(reversed(messages))
+        
+        history = []
+        for msg in messages:
+            # Don't truncate content - orchestrator needs full context
+            history.append({
+                "role": msg.role,
+                "content": msg.content
+            })
+        
+        return history
+    
     def get_relevant_past_results(
         self,
         conversation_id: int,

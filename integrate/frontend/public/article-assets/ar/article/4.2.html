@@ -1,0 +1,87 @@
+<!doctype html>
+<html dir="rtl" lang="ar">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>الفصل الرابع — النسخة العربية</title>
+<style>
+  body { font-family: "Tajawal", "Almarai", "Noto Kufi Arabic", Arial, sans-serif; line-height:1.75; padding: 24px; }
+  table { border-collapse: collapse; width: 100%; margin: 16px 0; }
+  th, td { border: 1px solid #ccc; padding: 8px 10px; vertical-align: top; }
+  h1 { margin-top: 0; }
+  img { max-width: 100%; height: auto; display: block; margin: 16px 0; }
+  ul { padding-right: 18px; }
+</style>
+</head>
+<body>
+
+<!-- الحلقة 4.2 — الطبقة المعرفية: عندما تتعلّم المنظمة -->
+<h1>الحلقة 4.2 — الطبقة المعرفية: عندما يتعلّم الذكاء المنظمة</h1>
+
+<h2>مقدمة: ما بعد الأتمتة</h2>
+<p>الأنظمة الرقمية التقليدية تُسجّل <em>ما</em> يحدث؛ أمّا الأنظمة المعرفية فتفهم <em>لماذا</em> يحدث. عند تضمين الذكاء الاصطناعي داخل التوأم الرقمي يصبح <strong>معرفياً</strong> — يفسّر ويتنبّأ ويُوصي، فيتحوّل من أداة مراقبة إلى شريك تفكير.</p>
+
+<h2>ثلاثة أنماط من الذكاء</h2>
+<table>
+  <tr><th>النمط</th><th>الوظيفة</th><th>مثال تطبيقي</th></tr>
+  <tr><td><strong>وصفي</strong></td><td>فهم ما يجري الآن.</td><td>مراقبة تأخّر المشروعات بحسب العملية والدور.</td></tr>
+  <tr><td><strong>تنبّؤي</strong></td><td>استشراف ما قد يحدث لاحقاً.</td><td>توقّع مخاطر تجاوز التكاليف أو اختناقات الخدمة.</td></tr>
+  <tr><td><strong>إرشادي</strong></td><td>اقتراح ما ينبغي فعله.</td><td>اقتراح إعادة ترتيب خطوات عملية أو تدخلات سياسة.</td></tr>
+</table>
+
+<img src="images/ep4.2_1.png" alt="الحلقة المعرفية" />
+<!-- Image Description (EN): Circular loop labeled Observe → Learn → Simulate → Recommend → Act → Observe. -->
+<!-- الوصف (AR): حلقة دائرية بعنوان راقب ← تعلّم ← حاكِ ← أوصِ ← نفّذ ← راقب. -->
+
+<h2>من «ذكي» إلى «عاقل»</h2>
+<p>لوحات المعلومات وأدوات BI تصف الأداء — فهي <strong>ذكية</strong>. أما <strong>التوأم المعرفي</strong> فهو <strong>عاقل</strong>: يُعلّل، يُحاكي، ويتكيّف ديناميكياً.</p>
+<table>
+  <tr><th>المقاربة</th><th>القوة</th><th>القيود</th></tr>
+  <tr><td><strong>لوحات ذكية (Power BI مثلاً)</strong></td><td>تصوير فعّال للبيانات؛ مؤشرات موقّتة؛ حفْر وتحليل.</td><td>وصفي غالباً؛ المحاكاة والتغذية الراجعة تشغيلية يدوية.</td></tr>
+  <tr><td><strong>DTO معرفي</strong></td><td>وصفي + تنبّؤي + إرشادي؛ تغيير متغيرات لحظياً؛ محاكاة؛ تغذية تشغيلية.</td><td>يتطلّب نمذجة دلالية (EA→DTDL) وحَوْكمة لعوامل وبيانات ووكلاء.</td></tr>
+</table>
+
+<img src="images/ep4.2_2.png" alt="ذكي مقابل عاقل" />
+<!-- Image Description (EN): Left: data → BI dashboard. Right: DTO loop simulating scenarios and feeding approved actions back. -->
+<!-- الوصف (AR): يساراً: بيانات تتدفّق نحو لوحة BI؛ يميناً: حلقة DTO تحاكي سيناريوهات وتعيد الإجراءات المعتمدة للأنظمة. -->
+
+<h2>مستويان من الفوائد</h2>
+<h3>المستوى ١ — ذكي</h3>
+<ul>
+  <li>مؤشرات موثوقة بسلاسل نسب ربع سنوية واضحة.</li>
+  <li>خفض زمن الكمون التشغيلي عبر قنوات بيانات آنية تقريباً.</li>
+  <li>وضوح الملكية (عملية ↔ دور) بشكل قابل للتدقيق.</li>
+</ul>
+<h3>المستوى ٢ — عاقل</h3>
+<ul>
+  <li><strong>تغيير المتغيرات لحظياً:</strong> اختبر «ماذا لو أعدنا ترتيب التفتيش؟» وشاهد أثره قبل التنفيذ.</li>
+  <li><strong>ترجمة الرؤى:</strong> تحويل اللوحات إلى <em>مذكرات قرار</em> تولّدها الآلة مع المخاطر والمقايضات.</li>
+  <li><strong>عصف سيناريوهات:</strong> محاكاة مستهدفة مرتبطة مباشرة بالمؤشرات والعمليات المعروضة.</li>
+  <li><strong>حلقة مغلقة:</strong> تُدفَع الإجراءات المعتمدة إلى الأنظمة مع تتبّع كامل.</li>
+</ul>
+
+<img src="images/ep4.2_3.png" alt="من لوحة إلى مذكرة قرار" />
+<!-- Image Description (EN): Dashboard morphs into a decision brief (options A/B/C, KPI deltas, confidence). Apply button pushes changes. -->
+<!-- الوصف (AR): لوحة معلومات تتحوّل إلى مذكرة قرار بخيارات وتأثيرات على المؤشرات ونسب ثقة؛ زر «تطبيق» يرسل التغييرات. -->
+
+<h2>قابلية التنفيذ: لماذا أصبح DTO ممكناً الآن؟</h2>
+<ul>
+  <li><strong>المعايير:</strong> نضج ممارسات EA ونماذج DTDL للقطاع العام.</li>
+  <li><strong>البنية التحتية:</strong> سحابة حكومية معتمدة (DEEM) ومنصات بيانات مؤمّنة.</li>
+  <li><strong>تدفّقات البيانات:</strong> واجهات وخدمات أحداث لأنظمة التشغيل تُحدّث البيانات آنياً.</li>
+  <li><strong>الحَوْكمة:</strong> سياسات وطنية للبيانات والذكاء تشترط التتبّع والأخلاقيات — ما ينسجم طبيعياً مع DTO.</li>
+</ul>
+
+<img src="images/ep4.2_4.png" alt="خريطة قابلية تنفيذ DTO" />
+<!-- Image Description (EN): KSA map with badges: Standards (DTDL), Infrastructure (DEEM), Data (APIs/streams), Governance (ethics); arrows to 'DTO Ready'. -->
+<!-- الوصف (AR): خريطة المملكة مع شارات: معايير، بنية، بيانات، حوكمة؛ أسهم تتلاقى على ختم «جاهزية DTO». -->
+
+<h2>أهم الخلاصات</h2>
+<ul>
+  <li>يوفّر DTO مكاسب «ذكية» فورية، ويتيح قفزة «عاقلة» عند تضمين الذكاء.</li>
+  <li>الانتقال من تقارير إلى <strong>توصيات مُعلَّلة</strong> يتطلّب توأماً معرفياً.</li>
+  <li>البيئة الوطنية تجعل التحوّل إلى الحوكمة المعرفية قابلاً للتنفيذ ومستداماً.</li>
+</ul>
+
+</body>
+</html>

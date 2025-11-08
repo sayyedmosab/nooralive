@@ -1,5 +1,8 @@
+
 import React from 'react';
 import ReactDOM from 'react-dom/client';
+// Import the full Integrate theme CSS (local copy inside src) so CRA allows the import
+import './styles/integrate-full.css';
 import './index.css';
 import App from './App';
 import reportWebVitals from './reportWebVitals';

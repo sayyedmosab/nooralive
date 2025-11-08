@@ -1,132 +1,205 @@
+  // Remove misplaced hooks outside ChatRebuild
 import React, { useEffect, useRef, useState } from 'react';
-import styles from './Chat.module.css';
-
-type Message = { id: string; role: 'user' | 'agent' | 'system'; content: string; createdAt: string };
-
-const REBUILD_API = process.env.REACT_APP_REBUILD_API_URL || '/api/v1/chat/message';
-const STORAGE_KEY = 'rebuild_chat_history_v1';
-
-async function postWithRetry(url: string, body: any, retries = 2, backoff = 300) {
-  let attempt = 0;
-  while (true) {
-    try {
-      const res = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
-      });
-      const text = await res.text();
-      try {
-        return { ok: res.ok, status: res.status, json: JSON.parse(text) };
-      } catch (e) {
-        return { ok: res.ok, status: res.status, json: text };
-      }
-    } catch (err) {
-      if (attempt >= retries) throw err;
-      attempt += 1;
-      // exponential backoff
-      await new Promise(r => setTimeout(r, backoff * attempt));
-    }
-  }
+import styles from '../../components/Chat/Chat.module.css';
+import { CanvasRebuild } from '../../components/Canvas/CanvasManager';
+// Fallback for marked
+let marked: any;
+try {
+  marked = require('marked');
+} catch {
+  marked = (s: string) => s;
 }
+// Fallback for DOMPurify
+let DOMPurify: any;
+try {
+  DOMPurify = require('dompurify');
+} catch {
+  DOMPurify = { sanitize: (s: string) => s };
+}
+// Fallback for CHAT_API_URL and saveMessages
+let CHAT_API_URL = '/api/v1/chat/message';
+let saveMessages = (msgs: any) => {};
+try {
+  const api = require('../../utils/api');
+  CHAT_API_URL = api.CHAT_API_URL || CHAT_API_URL;
+  saveMessages = api.saveMessages || saveMessages;
+} catch {}
+// Fallback for Message type
+type Message = {
+  id: string;
+  role: string;
+  content: string;
+  createdAt: string;
+  htmlContent?: string;
+};
 
-export default function ChatRebuild() {
-  const [messages, setMessages] = useState<Message[]>(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      return raw ? JSON.parse(raw) : [];
-    } catch (e) { return []; }
-  });
+function ChatRebuild() {
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
-  const [lastPrompt, setLastPrompt] = useState<string | null>(null);
-  const mounted = useRef(true);
-
+  const [messages, setMessages] = useState<Message[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [malformed, setMalformed] = useState(false);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+  // New Chat handler
+  const handleNewChat = () => {
+    setMessages([]);
+    setInput('');
+    setError(null);
+    setMalformed(false);
+    window.dispatchEvent(new Event('newChat'));
+  };
+  // Debug modal state
+  const [showDebug, setShowDebug] = useState(false);
+  const [debugInfo, setDebugInfo] = useState<any>(null);
+  // Debug modal event listener
   useEffect(() => {
-    mounted.current = true;
-    return () => { mounted.current = false; };
-  }, []);
+    const handler = (e: Event) => {
+      setShowDebug(true);
+      setDebugInfo({ messages, error, malformed });
+    };
+    window.addEventListener('showDebug', handler);
+    return () => window.removeEventListener('showDebug', handler);
+  }, [messages, error, malformed]);
 
-  useEffect(() => {
-    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(messages)); } catch (e) { }
-  }, [messages]);
+  const handleSend = async () => {
+    if (!input.trim() || loading) return;
 
-  const append = (m: Message) => setMessages(prev => [...prev, m]);
+    const userMessage: Message = {
+      id: Date.now().toString(),
+      role: 'user',
+      content: input,
+      createdAt: new Date().toISOString()
+    };
 
-  const send = async (text: string) => {
-    if (!text.trim()) return;
-    const userMsg: Message = { id: String(Date.now()), role: 'user', content: text, createdAt: new Date().toISOString() };
-    append(userMsg);
-    setLastPrompt(text);
+    const newMessages = [...messages, userMessage];
+    setMessages(newMessages);
+    saveMessages(newMessages);
     setInput('');
     setLoading(true);
-    try {
-      const { ok, json } = await postWithRetry(REBUILD_API, { query: text }, 2, 250);
-      if (!mounted.current) return;
-      if (!ok) {
-        append({ id: String(Date.now()+1), role: 'system', content: `Server returned status ${json && json.status ? json.status : 'error'}`, createdAt: new Date().toISOString() });
-      } else if (json && json.message) {
-        append({ id: String(Date.now()+2), role: 'agent', content: typeof json.message === 'string' ? json.message : JSON.stringify(json.message), createdAt: new Date().toISOString() });
-        // Emit event to allow Canvas to react to structured payloads
-        try {
-          const parsed = typeof json.message === 'string' ? (() => { try { return JSON.parse(json.message); } catch { return null; } })() : json.message;
-          if (parsed && typeof parsed === 'object') window.dispatchEvent(new CustomEvent('chat:structured', { detail: parsed }));
-        } catch (_) {}
-      } else {
-        append({ id: String(Date.now()+3), role: 'system', content: 'Unexpected response from server', createdAt: new Date().toISOString() });
-      }
-    } catch (err: any) {
-      append({ id: String(Date.now()+4), role: 'system', content: `Network error: ${err?.message || err}`, createdAt: new Date().toISOString() });
-    } finally {
-      if (mounted.current) setLoading(false);
-      setTimeout(() => {
-        const el = document.querySelector('#rebuild-chat .messages') as HTMLElement | null;
-        if (el) el.scrollTop = el.scrollHeight;
-      }, 60);
-    }
-  };
+    setError(null);
+    setMalformed(false);
 
-  const handleKey = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' && !loading) send(input.trim());
+    try {
+  const res = await fetch(CHAT_API_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          query: input,
+          conversation_id: null,
+          persona: 'transformation_analyst'
+        })
+      });
+
+      if (!res.ok) {
+        throw new Error(`HTTP ${res.status}`);
+      }
+
+      const data = await res.json();
+      if (!data || typeof data !== 'object') {
+        setMalformed(true);
+        return;
+      }
+
+      // Main agent message
+      let agentMessage: Message | null = null;
+      if (data.message && typeof data.message === 'string') {
+        agentMessage = {
+          id: (Date.now() + 1).toString(),
+          role: 'agent',
+          content: data.message,
+          createdAt: new Date().toISOString(),
+          htmlContent: DOMPurify.sanitize(marked(data.message) as string)
+        };
+      }
+
+      if (agentMessage) {
+        const updatedMessages = [...newMessages, agentMessage];
+        setMessages(updatedMessages);
+        saveMessages(updatedMessages);
+      } else {
+        setMalformed(true);
+      }
+
+      // Handle artifacts from backend
+      if (Array.isArray(data.artifacts) && data.artifacts.length > 0) {
+        // Dispatch artifacts to canvas
+        window.dispatchEvent(new CustomEvent('chat:artifacts', { 
+          detail: { artifacts: data.artifacts } 
+        }));
+      }
+    } catch (e) {
+      console.error('Chat error:', e);
+      setError('Connection failed. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleRetry = () => {
-    if (lastPrompt) send(lastPrompt);
-  };
-
-  const clearConversation = () => {
-    setMessages([]);
-    localStorage.removeItem(STORAGE_KEY);
-    window.dispatchEvent(new Event('newChat'));
+    if (messages.length > 0 && messages[messages.length - 1].role === 'user') {
+      setInput(messages[messages.length - 1].content);
+      setMessages(messages.slice(0, -1));
+      setError(null);
+      setMalformed(false);
+    }
   };
 
   return (
-    <div id="rebuild-chat" className={styles.container}>
-      <div className={styles.header}>
-        <div className={styles.title}>Rebuild Chat (isolated)</div>
-        <div>
-          <button onClick={clearConversation} className={styles.headerBtn}>New</button>
-          <button onClick={handleRetry} className={styles.headerBtn} disabled={!lastPrompt}>Retry</button>
-        </div>
+    <div className={styles.chatContainer}>
+      {/* Top control buttons */}
+      <div style={{ textAlign: 'right', margin: '8px 0', display: 'flex', gap: '8px' }}>
+        <button className="history-btn" onClick={() => window.dispatchEvent(new Event('showHistory'))}>History</button>
+        <button className="new-chat-btn" onClick={handleNewChat}>New Chat</button>
+        <button className="canvas-toggle-btn" onClick={() => window.dispatchEvent(new Event('toggleCanvas'))}>Canvas</button>
+        <button className="debug-btn" onClick={() => window.dispatchEvent(new Event('showDebug'))}>Show Debug</button>
       </div>
+      {/* Mount CanvasRebuild so it can render when mode !== 'hidden' */}
+      <CanvasRebuild />
       <div className={styles.messages}>
-        {messages.map(m => (
-          <div key={m.id} className={`${styles.message} ${styles[m.role] || ''}`}>
-            <div className={styles.meta}>{m.role} • {new Date(m.createdAt).toLocaleTimeString()}</div>
-            <div className={styles.content}>{m.content}</div>
+        {messages.map((msg, idx) => (
+          <div key={idx} className={`${styles.message} ${styles[msg.role]}`}>
+            {msg.htmlContent ? (
+              <div dangerouslySetInnerHTML={{ __html: msg.htmlContent }} />
+            ) : (
+              <div>{msg.content}</div>
+            )}
           </div>
         ))}
+        <div ref={messagesEndRef} />
       </div>
-      <div className={styles.inputRow}>
+      {error && (
+        <div className={styles.error}>
+          {error} <button onClick={handleRetry}>Retry</button>
+        </div>
+      )}
+      {malformed && (
+        <div className={styles.error}>
+          Connection error. <button onClick={handleRetry}>Click here to retry.</button>
+        </div>
+      )}
+      {showDebug && (
+        <div className={styles.debugModal}>
+          <h3>Debug Info</h3>
+          <pre>{JSON.stringify(debugInfo, null, 2)}</pre>
+          <button onClick={() => setShowDebug(false)}>Close</button>
+        </div>
+      )}
+      <div className={styles.inputArea}>
         <input
+          type="text"
           value={input}
           onChange={e => setInput(e.target.value)}
-          onKeyDown={handleKey}
-          placeholder="Ask a question..."
+          onKeyDown={e => e.key === 'Enter' && handleSend()}
+          placeholder="Type your message..."
           disabled={loading}
+          autoFocus
         />
-        <button onClick={() => send(input)} disabled={loading || !input.trim()}>Send</button>
+        <button onClick={handleSend} disabled={loading || !input.trim()}>
+          {loading ? '...' : 'Send'}
+        </button>
       </div>
     </div>
   );
 }
+
+export { ChatRebuild };
