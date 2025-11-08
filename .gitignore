@@ -54,3 +54,4 @@ htmlcov/
 # Git
 *.orig
 *.rej
+integrate/
