@@ -23,6 +23,9 @@ class DebugLogger:
                 # Ensure events array exists (for backward compatibility)
                 if "events" not in self.log_data:
                     self.log_data["events"] = []
+                # Ensure layers dict exists (for backward compatibility)
+                if "layers" not in self.log_data:
+                    self.log_data["layers"] = {}
                 # Add metadata for this turn
                 if "turns" not in self.log_data:
                     self.log_data["turns"] = []
@@ -50,7 +53,9 @@ class DebugLogger:
                 "turn_number": 1
             }],
             # New format: flat events array
-            "events": []
+            "events": [],
+            # Layers for structured logging
+            "layers": {}
         }
     def log_event(self, event_type: str, data: Any):
         """

@@ -105,7 +105,7 @@ If this is the first user turn:
 
 4. Structure Response
 
-   * Present tabular data (≤5 columns, ≤20 rows).
+   * Present tabular data (≤5 columns, ≤100 rows).
    * If appropriate, include visualization in valid Highcharts JSON format.
    * Summarize statistical and business insights.
 
@@ -129,7 +129,7 @@ Rules:
 
 * Maximum three Cypher queries per turn.
 * Always filter by year when applicable.
-* Limit results to 20 rows unless user specifies otherwise.
+* Limit results to 100 rows unless user specifies otherwise.
 * Order by year DESC, name ASC when relevant.
 * Use COUNT(), SUM(), AVG() for aggregations.
 * Use DISTINCT to avoid duplication.
@@ -598,7 +598,7 @@ The LLM must always return a single JSON object:
 
 ### CONSTRAINTS
 - Maximum 3 Cypher queries per user request.  
-- Maximum 20 result rows.  
+- Maximum 100 result rows.  
 - Confidence threshold 0.5 → ask clarification.  
 - Maintain same language as user query (English or Arabic).  
 - Token budget: approximately 2000 tokens.  

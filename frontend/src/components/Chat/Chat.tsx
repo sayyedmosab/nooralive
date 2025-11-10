@@ -193,7 +193,7 @@ function ChatRebuild({ conversationId }: ChatRebuildProps) {
           artifactDescriptions: Array.isArray(data.artifacts) ? (data.artifacts as any[]).map((a: any) => typeof a === 'string' ? a : a.title || String(a)) : []
         };
         // Preprocess: convert newlines to <br> tags
-        let processedContent = data.message.replace(/\n/g, '<br>');
+        let processedContent = content.replace(/\n/g, '<br>');
         
         // Apply markdown rendering if available
         if (typeof marked === 'function') {
